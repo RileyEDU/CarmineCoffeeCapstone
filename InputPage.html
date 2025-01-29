@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Carmine Coffee</title>
+    <link rel="icon" type="image/x-icon" href="https://cdn-icons-png.flaticon.com/512/712/712287.png">
+    <link href="https://unpkg.com/tabulator-tables@5.5.0/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+          integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.0/dist/js/tabulator.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+            padding-top: 20px;
+            overflow-x: hidden;
+            /* Prevent horizontal scroll on the body */
+        }
+
+        .wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            height: 100%;
+            width: 100%;
+            /* Ensure wrapper takes full width */
+        }
+
+        .tabulator-header {
+            font-size: smaller;
+            text-wrap: initial;
+
+            height: 5vh;
+        }
+
+        .tablemain {
+            width: 100vw;
+            /* Occupy most of the screen width */
+            max-width: 1400px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            background-color: white;
+        }
+
+        .tablemain thead {
+            width: 100vw;
+            background-color: rgba(150,0,24,.9);
+            color: white;
+        }
+
+        .tablemain th {
+            width: 100vw;
+            text-align: center;
+            font-size: 1.2em;
+        }
+
+        #data-table {
+            width: 100vw;
+            height: 100%;
+            overflow-x: auto;
+        }
+
+
+        #editForm,
+        #inputForm,
+        #infoForm {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+        #aroma, #acidity, #sweetness, #body, #finish,
+        #edit-aroma, #edit-acidity, #edit-sweetness, #edit-body, #edit-finish{
+            accent-color: rgba(150,0,24,.9);
+        }
+
+        .editFormContent,
+        .inputFormContent,
+        .infoFormContent {
+            background-color: #fefefe;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 30px;
+            border: 1px solid #888;
+            /* Wider width */
+            width: 80%;
+            /* Adjust as needed */
+            max-width: 1000px;
+            /* Increased max-width */
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: relative;
+            z-index: 2;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+        }
+
+        .tablesub {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .tablesub td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        .tablesub input[type="text"],
+        .tablesub input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .tablesub input[type="range"] {
+            width: 95%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .tablesub label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .update-button-container,
+        .submit-button-container {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            padding: 0;
+            /* Remove default padding */
+        }
+
+        .update-button-container td,
+        .submit-button-container td {
+            text-align: center;
+            padding: 0;
+            /* Remove default padding */
+        }
+
+        #updateBtn,
+        #submit {
+            margin: 10px auto;
+            /* Add top/bottom margin and center horizontally */
+            background-color: rgba(150,0,24,1);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #updateBtn:hover {
+            background-color: rgba(150,0,24,.9);
+        }
+        #submit:hover {
+            background-color: rgba(150,0,24,.9);
+        }
+
+        .btn-add-new {
+            background-color: rgba(150,0,24,.1);
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-add-new:hover {
+            background-color: rgba(150,0,24,.9);
+        }
+        .info-data-and-chart-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .plotlySub {
+            width: 100%;
+        }
+
+        .dataSub {
+            width: 100%;
+        }
+
+        .info-notes-container {
+            width: 95%;
+            margin-top: 20px;
+        }
+
+        .plotlySub .js-plotly-plot {
+            width: 40% !important;
+            height: 100% !important;
+        }
+
+        .plotlySub .plotly {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        .plotly-graph-div {
+            width: 100% !important;
+            height: 400px !important;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="wrapper">
+    <table class="tablemain">
+        <thead>
+        <tr>
+            <th>
+                <h1 style="text-align: center">Carmine Coffee</h1>
+            </th>
+            <th>
+                <h1 style="text-align: center" id="task">
+                    <button class="btn-add-new" onclick="showInputForm()">+ Add New</button>
+                </h1>
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td colspan="2">
+                <div id="data-table"></div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div id="editForm" class="editForm">
+    <div class="editFormContent">
+        <span onclick="closeEditForm()" class="close" title="Close Modal">&times;</span>
+        <table class="tablesub">
+            <tbody>
+            <tr>
+                <td><label for="edit-roast"></label><input type="text" id="edit-roast" name="roast" placeholder="Roast" /></td>
+                <td><label for="edit-origin"></label><input type="text" id="edit-origin" name="origin" placeholder="Origin" /></td>
+            </tr>
+            <tr>
+                <td><label for="edit-waterweight"></label><input type="number" id="edit-waterweight" name="waterweight" placeholder="Water Weight"
+                                                                 min="0" /></td>
+                <td><label for="edit-groundweight"></label><input type="number" id="edit-groundweight" name="groundweight" placeholder="Coffee Weight"
+                                                                  min="0" /></td>
+            </tr>
+            <tr>
+                <td><label for="edit-brewer"></label><input type="text" id="edit-brewer" name="brewer" placeholder="Brew Method" /></td>
+                <td><label for="edit-time"></label><input type="text" id="edit-time" name="time" placeholder="Time" /></td>
+            </tr>
+            <tr>
+                <td><label for="edit-grindsize"></label><input type="text" id="edit-grindsize" name="grindsize" placeholder="Grind Size" /></td>
+                <td><label for="edit-watertemp"></label><input type="number" id="edit-watertemp" name="watertemp" placeholder="Water Temperature"
+                                                               min="0" /></td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="edit-aroma">Aroma</label>
+                </td>
+                <td>
+                    <input type="range" id="edit-aroma" name="aroma" min="1" max="5" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="edit-acidity">Acidity</label>
+                </td>
+                <td>
+                    <input type="range" id="edit-acidity" name="acidity" min="1" max="5" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="edit-sweetness">Sweetness</label>
+                </td>
+                <td>
+                    <input type="range" id="edit-sweetness" name="sweetness" min="1" max="5" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="edit-body">Body</label>
+                </td>
+                <td>
+                    <input type="range" id="edit-body" name="body" min="1" max="5" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="edit-finish">Finish</label>
+                </td>
+                <td>
+                    <input type="range" id="edit-finish" name="finish" min="1" max="5" />
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2"><label for="edit-notes"></label><input type="text" id="edit-notes" name="notes" placeholder="Notes" /></td>
+            </tr>
+            <tr>
+                <td colspan="2" class="update-button-container"><button type="button" id="updateBtn">Update</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="inputForm" class="editForm">
+    <div class="editFormContent">
+        <span onclick="closeInputForm()" class="close" title="Close Modal">&times;</span>
+        <table class="tablesub">
+            <tbody>
+            <tr>
+                <td><label for="roast"></label><input type="text" id="roast" name="roast" placeholder="Roast" /></td>
+                <td><label for="origin"></label><input type="text" id="origin" name="origin" placeholder="Origin" /></td>
+            </tr>
+            <tr>
+                <td><label for="waterweight"></label><input type="number" id="waterweight" name="waterweight" placeholder="Water Weight" /></td>
+                <td><label for="groundweight"></label><input type="number" id="groundweight" name="groundweight" placeholder="Coffee Weight" />
+                </td>
+            </tr>
+            <tr>
+                <td><label for="brewer"></label><input type="text" id="brewer" name="brewer" placeholder="Brew Method" /></td>
+                <td><label for="time"></label><input type="text" id="time" name="time" placeholder="Time" /></td>
+            </tr>
+            <tr>
+                <td><label for="grindsize"></label><input type="text" id="grindsize" name="grindsize" placeholder="Grind Size" /></td>
+                <td><label for="watertemp"></label><input type="number" id="watertemp" name="watertemp" placeholder="Water Temperature" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="aroma">Aroma</label>
+                </td>
+                <td>
+                    <input type="range" id="aroma" name="aroma" min="1" max="5" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="acidity">Acidity</label>
+                </td>
+                <td>
+                    <input type="range" id="acidity" name="acidity" min="1" max="5" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="sweetness">Sweetness</label>
+                </td>
+                <td>
+                    <input type="range" id="sweetness" name="sweetness" min="1" max="5" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="body">Body</label>
+                </td>
+                <td>
+                    <input type="range" id="body" name="body" min="1" max="5" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="finish">Finish</label>
+                </td>
+                <td>
+                    <input type="range" id="finish" name="finish" min="1" max="5" />
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2"><label for="notes"></label><input type="text" id="notes" name="notes" placeholder="Notes" /></td>
+            </tr>
+            <tr>
+                <td colspan="2" class="submit-button-container"><button id="submit"
+                                                                        onclick="submitData()">Submit</button></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="infoForm" class="editForm">
+    <div class="infoFormContent">
+        <span onclick="closeInfoForm()" class="close" title="Close Modal">&times;</span>
+        <div class="info-data-and-chart-container">
+            <div class="dataSub">
+                <table class="tablesub">
+                    <tbody>
+                    <tr>
+                        <td><label>Roast:</label></td>
+                        <td><span id="info-roast"></span></td>
+                    </tr>
+                    <tr>
+                        <td><label>Origin:</label></td>
+                        <td><span id="info-origin"></span></td>
+                    </tr>
+                    <tr>
+                        <td><label>Water Weight:</label></td>
+                        <td><span id="info-waterweight"></span></td>
+                    </tr>
+                    <tr>
+                        <td><label>Coffee Weight:</label></td>
+                        <td><span id="info-groundweight"></span></td>
+                    </tr>
+                    <tr>
+                        <td><label>Ratio:</label></td>
+                        <td><span id="info-ratio"></span></td>
+                    </tr>
+                    <tr>
+                        <td><label>Brew Method:</label></td>
+                        <td><span id="info-brewer"></span></td>
+                    </tr>
+                    <tr>
+                        <td><label>Time:</label></td>
+                        <td><span id="info-time"></span></td>
+                    </tr>
+                    <tr>
+                        <td><label>Grind Size:</label></td>
+                        <td><span id="info-grindsize"></span></td>
+                    </tr>
+                    <tr>
+                        <td><label>Water Temperature:</label></td>
+                        <td><span id="info-watertemp"></span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="plotlySub">
+                <div id="plotlyChart" class="plotly-graph-div"></div>
+            </div>
+        </div>
+        <div class="info-notes-container">
+            <div class="info-notes-label">Notes:</div>
+            <div class="info-notes-content" id="info-notes"></div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    // Retrieve data from local storage
+    let tabledata = JSON.parse(localStorage.getItem('tableData')) || [];
+
+    // Ensure numbers are parsed correctly when initially loaded
+    tabledata.forEach(row => {
+        row.water_weight = parseFloat(row.water_weight);
+        row.coffee_weight = parseFloat(row.coffee_weight);
+        row.temperature = parseFloat(row.temperature);
+        row.aroma = parseFloat(row.aroma);
+        row.acidity = parseFloat(row.acidity);
+        row.sweetness = parseFloat(row.sweetness);
+        row.body = parseFloat(row.body);
+        row.finish = parseFloat(row.finish);
+        row.average_score = parseFloat(row.average_score);
+    });
+
+    // Initialize Tabulator table AFTER parsing numbers
+    let table = new Tabulator("#data-table", {
+
+        responsiveLayout: true,
+        rowHeight: 75,
+        virtualDomBuffer: 300,
+        data: tabledata,
+        layout: "fitData ",
+        columns: [
+            {
+                formatter: function () {
+                    return "<i class='fa-solid fa-trash-can'></i>";
+                },
+                width: "1%",
+                responsive: 0,
+                hozAlign: "center",
+                cellClick: function (e, cell) {
+                    deleteRow(cell);
+                }
+            },
+            {
+                formatter: function () {
+                    return "<i class='fa-solid fa-pencil'></i>";
+                },
+                width: "1%",
+                responsive: 0,
+                hozAlign: "center",
+                cellClick: function (e, cell) {
+                    editRow(cell);
+                }
+            },
+            {
+                formatter: function () {
+                    return "<i class='fa-solid fa-magnifying-glass'></i>";
+                },
+                width: "1%",
+                responsive: 0,
+                hozAlign: "center",
+                cellClick: function (e, cell) {
+                    infoRow(cell);
+                }
+            },
+            { title: "Roast", field: "roast", hozAlign: "center", responsive: 2 },
+            { title: "Origin", field: "origin", hozAlign: "center", responsive: 0 },
+            { title: "Brew Method", field: "brew_method", hozAlign: "center", responsive: 3 },
+            { title: "Water Weight", field: "water_weight", hozAlign: "center", responsive: 3 },
+            { title: "Coffee Weight", field: "coffee_weight", hozAlign: "center", responsive: 0 },
+            { title: "Ratio", field: "ratio", hozAlign: "center", responsive: 0 },
+            { title: "Time", field: "time", hozAlign: "center", responsive: 0 },
+            { title: "Grind", field: "grind", hozAlign: "center", responsive: 0 },
+            { title: "Temperature", field: "temperature", hozAlign: "center", responsive: 0 },
+            {
+                title: "Aroma", field: "aroma", hozAlign: "center", /*formatter:"star", formatterParams: {
+                    stars: 5
+                },*/ responsive: 1
+            },
+            {
+                title: "Acidity", field: "acidity", hozAlign: "center", /*formatter: "star", formatterParams: {
+                    stars: 5
+                }, */responsive: 1
+            },
+            {
+                title: "Sweetness", field: "sweetness", hozAlign: "center", /*formatter: "star", formatterParams: {
+                    stars: 5
+                }, */responsive: 1
+            },
+            {
+                title: "Body", field: "body", hozAlign: "center", /*formatter: "star", formatterParams: {
+                    stars: 5
+                }, */responsive: 1
+            },
+            {
+                title: "Finish", field: "finish", hozAlign: "center", /*formatter: "star",formatterParams: {
+                    stars: 5
+                }, */responsive: 1
+            },
+            { title: "Average Score", field: "average_score", hozAlign: "center", responsive: 0 },
+            { title: "Notes", field: "notes", hozAlign: "center", responsive: 1, width: "10%", formatter: "textarea" }
+        ],
+    });
+
+    function deleteRow(cell) {
+        let row = cell.getRow();
+        let rowIndex = table.getRows().indexOf(row); // Get the correct row index
+
+        // Remove the row data from the tabledata array
+        tabledata.splice(rowIndex, 1);
+
+        // Update local storage with the modified data
+        localStorage.setItem('tableData', JSON.stringify(tabledata));
+
+        // Delete the row from the Tabulator table
+        row.delete();
+    }
+
+
+    function editRow(cell) {
+        let row = cell.getRow();
+        let rowIndex = row.getIndex();
+        let rowData = row.getData();
+
+        // Populate input fields with current data
+        document.getElementById("edit-roast").value = rowData.roast;
+        document.getElementById("edit-origin").value = rowData.origin;
+        document.getElementById("edit-waterweight").value = rowData.water_weight;
+        document.getElementById("edit-groundweight").value = rowData.coffee_weight;
+        document.getElementById("edit-brewer").value = rowData.brew_method;
+        document.getElementById("edit-time").value = rowData.time;
+        document.getElementById("edit-grindsize").value = rowData.grind;
+        document.getElementById("edit-watertemp").value = rowData.temperature;
+        document.getElementById("edit-aroma").value = rowData.aroma;
+        document.getElementById("edit-acidity").value = rowData.acidity;
+        document.getElementById("edit-sweetness").value = rowData.sweetness;
+        document.getElementById("edit-body").value = rowData.body;
+        document.getElementById("edit-finish").value = rowData.finish;
+        document.getElementById("edit-notes").value = rowData.notes;
+
+        // Show the edit form
+        showEditForm();
+
+        // Set up the update button's onclick handler
+        document.getElementById("updateBtn").onclick = function () {
+            updateData(rowIndex, row);
+            closeEditForm();
+        };
+    }
+
+    function updateData(rowIndex, row) {
+        // Get updated values, ensuring numbers are parsed correctly
+        let roast = document.getElementById("edit-roast").value;
+        let origin = document.getElementById("edit-origin").value;
+        let waterWeight = parseFloat(document.getElementById("edit-waterweight").value);
+        let coffeeWeight = parseFloat(document.getElementById("edit-groundweight").value);
+        let brewMethod = document.getElementById("edit-brewer").value;
+        let time = document.getElementById("edit-time").value;
+        let grindSize = document.getElementById("edit-grindsize").value;
+        let waterTemp = parseFloat(document.getElementById("edit-watertemp").value);
+        let aroma = parseFloat(document.getElementById("edit-aroma").value);
+        let acidity = parseFloat(document.getElementById("edit-acidity").value);
+        let sweetness = parseFloat(document.getElementById("edit-sweetness").value);
+        let body = parseFloat(document.getElementById("edit-body").value);
+        let finish = parseFloat(document.getElementById("edit-finish").value);
+        let notes = document.getElementById("edit-notes").value;
+
+        // Calculate average score
+        let averageScore = (aroma + acidity + sweetness + body + finish) / 5;
+
+        // Calculate the coffee-to-water ratio
+        let ratio = coffeeWeight !== 0 ? "1:" + (waterWeight / coffeeWeight).toFixed(1) : "N/A";
+
+        // Update the data in the tabledata array
+        tabledata[rowIndex] = {
+            roast: roast,
+            origin: origin,
+            brew_method: brewMethod,
+            water_weight: waterWeight,
+            coffee_weight: coffeeWeight,
+            ratio: ratio,
+            time: time,
+            grind: grindSize,
+            temperature: waterTemp,
+            aroma: aroma,
+            acidity: acidity,
+            sweetness: sweetness,
+            body: body,
+            finish: finish,
+            average_score: averageScore.toFixed(1),
+            notes: notes
+        };
+        //Update data, then save to storage
+        row.update(tabledata[rowIndex]);
+        localStorage.setItem('tableData', JSON.stringify(tabledata));
+
+
+    }
+
+    function infoRow(cell) {
+        let row = cell.getRow();
+        let rowData = row.getData();
+
+        // Populate info fields with current data
+        document.getElementById("info-roast").textContent = rowData.roast;
+        document.getElementById("info-origin").textContent = rowData.origin;
+        document.getElementById("info-waterweight").textContent = rowData.water_weight;
+        document.getElementById("info-groundweight").textContent = rowData.coffee_weight;
+        document.getElementById("info-ratio").textContent = rowData.ratio;
+        document.getElementById("info-brewer").textContent = rowData.brew_method;
+        document.getElementById("info-time").textContent = rowData.time;
+        document.getElementById("info-grindsize").textContent = rowData.grind;
+        document.getElementById("info-watertemp").textContent = rowData.temperature;
+        document.getElementById("info-notes").textContent = rowData.notes;
+
+        // Create the Plotly polar plot
+        let trace1 = {
+            type: 'scatterpolar',
+            r: [rowData.aroma, rowData.acidity, rowData.sweetness, rowData.body, rowData.finish, rowData.aroma],
+            theta: ['Aroma', 'Acidity', 'Sweetness', 'Body', 'Finish', 'Aroma'],
+            fill: 'toself',
+            fillcolor: 'rgba(150,0,24,.1)',
+            line: {
+                color: 'rgba(150,0,24,.5)'
+            },
+            name: 'Attributes'
+        }
+
+        let trace2 = {
+            type: 'scatterpolar',
+            r: [rowData.average_score, rowData.average_score, rowData.average_score, rowData.average_score, rowData.average_score, rowData.average_score],
+            theta: ['Aroma', 'Acidity', 'Sweetness', 'Body', 'Finish', 'Aroma'],
+            mode: 'lines',
+            name: 'Average Score',
+            line: {
+                shape: 'circle',
+                smoothing: 1,
+                width: 3,
+                color: 'rgba(150,0,24,.8)'
+            }
+        }
+
+        let layout = {
+            responsive: true, // Add this for responsiveness
+            autosize: true, // Add this for auto-sizing
+            polar: {
+                radialaxis: {
+                    visible: true,
+                    showticklabels: false,
+                    range: [0, 5]
+                },
+                angularaxis: {
+                    rotation: 90,
+                    direction: 'clockwise'
+                }
+            },
+            showlegend: false
+        };
+
+        Plotly.newPlot('plotlyChart', [trace1, trace2], layout);
+
+        showInfoForm();
+    }
+
+    function showEditForm() {
+        document.getElementById("editForm").style.display = "block";
+    }
+
+
+
+    function showInputForm() {
+        document.getElementById("inputForm").style.display = "block";
+    }
+
+
+    function showInfoForm() {
+        document.getElementById("infoForm").style.display = "block";
+    }
+
+    // Function to close the edit form
+    function closeEditForm() {
+        document.getElementById("editForm").style.display = "none";
+    }
+
+    // Function to close the input form
+    function closeInputForm() {
+        document.getElementById("inputForm").style.display = "none";
+    }
+
+    // Function to close the info form
+    function closeInfoForm() {
+        document.getElementById("infoForm").style.display = "none";
+    }
+
+    // Add event listeners to close forms when clicking outside the content
+    document.addEventListener('DOMContentLoaded', function() {
+        setupCloseFormListeners();
+    });
+
+    function setupCloseFormListeners() {
+        document.getElementById('editForm').addEventListener('click', function(event) {
+            if (event.target.id === 'editForm') {
+                closeEditForm();
+            }
+        });
+
+        document.getElementById('inputForm').addEventListener('click', function(event) {
+            if (event.target.id === 'inputForm') {
+                closeInputForm();
+            }
+        });
+
+        document.getElementById('infoForm').addEventListener('click', function(event) {
+            if (event.target.id === 'infoForm') {
+                closeInfoForm();
+            }
+        });
+    }
+
+    function submitData() {
+        // Get values from input fields, ensuring numbers are parsed correctly
+        let roast = document.getElementById("roast").value;
+        let origin = document.getElementById("origin").value;
+        let waterWeight = parseFloat(document.getElementById("waterweight").value);
+        let coffeeWeight = parseFloat(document.getElementById("groundweight").value);
+        let brewMethod = document.getElementById("brewer").value;
+        let time = document.getElementById("time").value;
+        let grindSize = document.getElementById("grindsize").value;
+        let waterTemp = parseFloat(document.getElementById("watertemp").value);
+        let aroma = parseFloat(document.getElementById("aroma").value);
+        let acidity = parseFloat(document.getElementById("acidity").value);
+        let sweetness = parseFloat(document.getElementById("sweetness").value);
+        let body = parseFloat(document.getElementById("body").value);
+        let finish = parseFloat(document.getElementById("finish").value);
+        let notes = document.getElementById("notes").value;
+
+        // Validation for numerical and positive values
+        if (isNaN(waterWeight) || waterWeight <= 0 || isNaN(coffeeWeight) || coffeeWeight <= 0 || isNaN(waterTemp) || waterTemp <= 0) {
+            alert("Water weight, coffee weight, and water temperature must be greater than 0 and numerical.");
+            return; // Stop submission
+        }
+
+        // Calculate average score
+        let averageScore = (aroma + acidity + sweetness + body + finish) / 5;
+
+        // Calculate the coffee-to-water ratio
+        let ratio = coffeeWeight !== 0 ? "1:" + (waterWeight / coffeeWeight).toFixed(1) : "N/A";
+
+        // Create data object
+        let newData = {
+            roast: roast,
+            origin: origin,
+            brew_method: brewMethod,
+            water_weight: waterWeight,
+            coffee_weight: coffeeWeight,
+            ratio: ratio,
+            time: time,
+            grind: grindSize,
+            temperature: waterTemp,
+            aroma: aroma,
+            acidity: acidity,
+            sweetness: sweetness,
+            body: body,
+            finish: finish,
+            average_score: averageScore.toFixed(1),
+            notes: notes
+        };
+
+        // Add new data to tabledata array and update the Tabulator table
+        tabledata.push(newData);
+        table.addData([newData]);
+
+        // Store data in local storage
+        localStorage.setItem('tableData', JSON.stringify(tabledata));
+
+        // Close the input form
+        closeInputForm();
+    }
+</script>
+</body>
+</html>
