@@ -13,13 +13,13 @@
     <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.0/dist/js/tabulator.min.js"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8f9fa;
             color: #343a40;
             padding-top: 20px;
             overflow-x: hidden;
-            /* Prevent horizontal scroll on the body */
         }
 
         .wrapper {
@@ -29,19 +29,16 @@
             padding: 20px;
             height: 100%;
             width: 100%;
-            /* Ensure wrapper takes full width */
         }
 
         .tabulator-header {
             font-size: smaller;
             text-wrap: initial;
-
             height: 5vh;
         }
 
         .tablemain {
             width: 100vw;
-            /* Occupy most of the screen width */
             max-width: 1400px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             border-radius: 10px;
@@ -96,11 +93,8 @@
             transform: translate(-50%, -50%);
             padding: 30px;
             border: 1px solid #888;
-            /* Wider width */
             width: 80%;
-            /* Adjust as needed */
             max-width: 1000px;
-            /* Increased max-width */
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
@@ -159,20 +153,17 @@
             justify-content: center;
             width: 100%;
             padding: 0;
-            /* Remove default padding */
         }
 
         .update-button-container td,
         .submit-button-container td {
             text-align: center;
             padding: 0;
-            /* Remove default padding */
         }
 
         #updateBtn,
         #submit {
             margin: 10px auto;
-            /* Add top/bottom margin and center horizontally */
             background-color: rgba(150,0,24,1);
             color: white;
             padding: 10px 20px;
@@ -189,7 +180,7 @@
             background-color: rgba(150,0,24,.9);
         }
 
-        .btn-add-new {
+        .btn-add-new, #changeUserBtn {
             background-color: rgba(150,0,24,.1);
             color: white;
             padding: 8px 15px;
@@ -200,7 +191,7 @@
             transition: background-color 0.3s ease;
         }
 
-        .btn-add-new:hover {
+        .btn-add-new:hover, #changeUserBtn:hover {
             background-color: rgba(150,0,24,.9);
         }
         .info-data-and-chart-container {
@@ -245,11 +236,12 @@
         <thead>
         <tr>
             <th>
-                <h1 style="text-align: center">Carmine Coffee</h1>
+                <h1 style="text-align: center">Carmine Coffee - <span id="currentUserDisplay"></span></h1>
+                <small><button id="changeUserBtn" onclick="changeUser()">Change User</button></small>
             </th>
             <th>
                 <h1 style="text-align: center" id="task">
-                    <button class="btn-add-new" onclick="showInputForm()">+ Add New</button>
+                    <button class="btn-add-new" onclick="showInputForm()">+ New Record</button>
                 </h1>
             </th>
         </tr>
@@ -389,8 +381,7 @@
             </tr>
             <tr>
                 <td>
-                    <label for="body">Body</label>
-                </td>
+                    <label for="body">Body</label></td>
                 <td>
                     <input type="range" id="body" name="body" min="1" max="5" />
                 </td>
@@ -474,143 +465,143 @@
 
 
 <script>
-    // Retrieve data from local storage
-    let tabledata = JSON.parse(localStorage.getItem('tableData')) || [];
+    let currentUser = localStorage.getItem('currentUser') || "defaultUser";
+    let users = JSON.parse(localStorage.getItem('users')) || ["defaultUser"];
+    let tabledata = [];
+    let table;
+    if (currentUser == "defaultUser"){
+        changeUser()
+    }
 
-    // Ensure numbers are parsed correctly when initially loaded
-    tabledata.forEach(row => {
-        row.water_weight = parseFloat(row.water_weight);
-        row.coffee_weight = parseFloat(row.coffee_weight);
-        row.temperature = parseFloat(row.temperature);
-        row.aroma = parseFloat(row.aroma);
-        row.acidity = parseFloat(row.acidity);
-        row.sweetness = parseFloat(row.sweetness);
-        row.body = parseFloat(row.body);
-        row.finish = parseFloat(row.finish);
-        row.average_score = parseFloat(row.average_score);
-    });
+    function changeUser() {
+        let newUser = prompt("Enter username:", currentUser);
+        if (newUser && newUser !== currentUser) {
+            if (!users.includes(newUser)) {
+                users.push(newUser);
+                localStorage.setItem('users', JSON.stringify(users));
+            }
+            currentUser = newUser;
+            localStorage.setItem('currentUser', currentUser);
+            loadUserData();
+            updateCurrentUserDisplay();
+        }
+        if (currentUser == "defaultUser"){
+            changeUser()
+        }
+    }
 
-    // Initialize Tabulator table AFTER parsing numbers
-    let table = new Tabulator("#data-table", {
+    function updateCurrentUserDisplay() {
+        document.getElementById('currentUserDisplay').textContent = currentUser;
+    }
 
-        responsiveLayout: true,
-        rowHeight: 75,
-        virtualDomBuffer: 300,
-        data: tabledata,
-        layout: "fitData ",
-        columns: [
-            {
-                formatter: function () {
-                    return "<i class='fa-solid fa-trash-can'></i>";
+    function loadUserData() {
+        tabledata = JSON.parse(localStorage.getItem(`tableData_${currentUser}`)) || [];
+        tabledata.forEach(row => {
+            row.water_weight = parseFloat(row.water_weight);
+            row.coffee_weight = parseFloat(row.coffee_weight);
+            row.temperature = parseFloat(row.temperature);
+            row.aroma = parseFloat(row.aroma);
+            row.acidity = parseFloat(row.acidity);
+            row.sweetness = parseFloat(row.sweetness);
+            row.body = parseFloat(row.body);
+            row.finish = parseFloat(row.finish);
+            if (row.average_score) {
+                row.average_score = parseFloat(row.average_score);
+            }
+        });
+
+        if (table) {
+            table.setData(tabledata);
+        } else {
+            initializeTable();
+        }
+        updateCurrentUserDisplay();
+    }
+
+
+    function saveUserData() {
+        localStorage.setItem(`tableData_${currentUser}`, JSON.stringify(tabledata));
+    }
+
+    function initializeTable() {
+        table = new Tabulator("#data-table", {
+            responsiveLayout: true,
+            rowHeight: 75,
+            virtualDomBuffer: 300,
+            data: tabledata,
+            layout: "fitData",
+            columns: [
+                {
+                    formatter: function () { return "<i class='fa-solid fa-trash-can'></i>"; },
+                    width: "1%",
+                    responsive: 0,
+                    hozAlign: "center",
+                    cellClick: function (e, cell) { deleteRow(cell); }
                 },
-                width: "1%",
-                responsive: 0,
-                hozAlign: "center",
-                cellClick: function (e, cell) {
-                    deleteRow(cell);
-                }
-            },
-            {
-                formatter: function () {
-                    return "<i class='fa-solid fa-pencil'></i>";
+                {
+                    formatter: function () { return "<i class='fa-solid fa-pencil'></i>"; },
+                    width: "1%",
+                    responsive: 0,
+                    hozAlign: "center",
+                    cellClick: function (e, cell) { editRow(cell); }
                 },
-                width: "1%",
-                responsive: 0,
-                hozAlign: "center",
-                cellClick: function (e, cell) {
-                    editRow(cell);
-                }
-            },
-            {
-                formatter: function () {
-                    return "<i class='fa-solid fa-magnifying-glass'></i>";
+                {
+                    formatter: function () { return "<i class='fa-solid fa-magnifying-glass'></i>"; },
+                    width: "1%",
+                    responsive: 0,
+                    hozAlign: "center",
+                    cellClick: function (e, cell) { infoRow(cell); }
                 },
-                width: "1%",
-                responsive: 0,
-                hozAlign: "center",
-                cellClick: function (e, cell) {
-                    infoRow(cell);
-                }
-            },
-            { title: "Roast", field: "roast", hozAlign: "center", responsive: 2 },
-            { title: "Origin", field: "origin", hozAlign: "center", responsive: 0 },
-            { title: "Brew Method", field: "brew_method", hozAlign: "center", responsive: 3 },
-            { title: "Water Weight", field: "water_weight", hozAlign: "center", responsive: 3 },
-            { title: "Coffee Weight", field: "coffee_weight", hozAlign: "center", responsive: 0 },
-            { title: "Ratio", field: "ratio", hozAlign: "center", responsive: 0 },
-            { title: "Time", field: "time", hozAlign: "center", responsive: 0 },
-            { title: "Grind", field: "grind", hozAlign: "center", responsive: 0 },
-            { title: "Temperature", field: "temperature", hozAlign: "center", responsive: 0 },
-            {
-                title: "Aroma", field: "aroma", hozAlign: "center", /*formatter:"star", formatterParams: {
-                    stars: 5
-                },*/ responsive: 1
-            },
-            {
-                title: "Acidity", field: "acidity", hozAlign: "center", /*formatter: "star", formatterParams: {
-                    stars: 5
-                }, */responsive: 1
-            },
-            {
-                title: "Sweetness", field: "sweetness", hozAlign: "center", /*formatter: "star", formatterParams: {
-                    stars: 5
-                }, */responsive: 1
-            },
-            {
-                title: "Body", field: "body", hozAlign: "center", /*formatter: "star", formatterParams: {
-                    stars: 5
-                }, */responsive: 1
-            },
-            {
-                title: "Finish", field: "finish", hozAlign: "center", /*formatter: "star",formatterParams: {
-                    stars: 5
-                }, */responsive: 1
-            },
-            { title: "Average Score", field: "average_score", hozAlign: "center", responsive: 0 },
-            { title: "Notes", field: "notes", hozAlign: "center", responsive: 1, width: "10%", formatter: "textarea" }
-        ],
-    });
+                { title: "Roast", field: "roast", hozAlign: "center", responsive: 2 },
+                { title: "Origin", field: "origin", hozAlign: "center", responsive: 0 },
+                { title: "Brew Method", field: "brew_method", hozAlign: "center", responsive: 3 },
+                { title: "Water Weight", field: "water_weight", hozAlign: "center", responsive: 3 },
+                { title: "Coffee Weight", field: "coffee_weight", hozAlign: "center", responsive: 0 },
+                { title: "Ratio", field: "ratio", hozAlign: "center", responsive: 0 },
+                { title: "Time", field: "time", hozAlign: "center", responsive: 0 },
+                { title: "Grind", field: "grind", hozAlign: "center", responsive: 0 },
+                { title: "Temperature", field: "temperature", hozAlign: "center", responsive: 0 },
+                { title: "Aroma", field: "aroma", hozAlign: "center", responsive: 1 },
+                { title: "Acidity", field: "acidity", hozAlign: "center", responsive: 1 },
+                { title: "Sweetness", field: "sweetness", hozAlign: "center", responsive: 1 },
+                { title: "Body", field: "body", hozAlign: "center", responsive: 1 },
+                { title: "Finish", field: "finish", hozAlign: "center", responsive: 1 },
+                { title: "Average Score", field: "average_score", hozAlign: "center", responsive: 0 },
+                { title: "Notes", field: "notes", hozAlign: "center", responsive: 1, width: "10%", formatter: "textarea" }
+            ],
+        });
+    }
 
     function deleteRow(cell) {
         let row = cell.getRow();
-        let rowIndex = table.getRows().indexOf(row); // Get the correct row index
-
-        // Remove the row data from the tabledata array
+        let rowIndex = row.getIndex();
         tabledata.splice(rowIndex, 1);
-
-        // Update local storage with the modified data
-        localStorage.setItem('tableData', JSON.stringify(tabledata));
-
-        // Delete the row from the Tabulator table
+        saveUserData();
         row.delete();
     }
-
 
     function editRow(cell) {
         let row = cell.getRow();
         let rowIndex = row.getIndex();
         let rowData = row.getData();
 
-        // Populate input fields with current data
-        document.getElementById("edit-roast").value = rowData.roast;
-        document.getElementById("edit-origin").value = rowData.origin;
-        document.getElementById("edit-waterweight").value = rowData.water_weight;
-        document.getElementById("edit-groundweight").value = rowData.coffee_weight;
-        document.getElementById("edit-brewer").value = rowData.brew_method;
-        document.getElementById("edit-time").value = rowData.time;
-        document.getElementById("edit-grindsize").value = rowData.grind;
-        document.getElementById("edit-watertemp").value = rowData.temperature;
-        document.getElementById("edit-aroma").value = rowData.aroma;
-        document.getElementById("edit-acidity").value = rowData.acidity;
-        document.getElementById("edit-sweetness").value = rowData.sweetness;
-        document.getElementById("edit-body").value = rowData.body;
-        document.getElementById("edit-finish").value = rowData.finish;
-        document.getElementById("edit-notes").value = rowData.notes;
+        document.getElementById("edit-roast").value = rowData.roast || '';
+        document.getElementById("edit-origin").value = rowData.origin || '';
+        document.getElementById("edit-waterweight").value = rowData.water_weight || '';
+        document.getElementById("edit-groundweight").value = rowData.coffee_weight || '';
+        document.getElementById("edit-brewer").value = rowData.brew_method || '';
+        document.getElementById("edit-time").value = rowData.time || '';
+        document.getElementById("edit-grindsize").value = rowData.grind || '';
+        document.getElementById("edit-watertemp").value = rowData.temperature || '';
+        document.getElementById("edit-aroma").value = rowData.aroma || 1;
+        document.getElementById("edit-acidity").value = rowData.acidity || 1;
+        document.getElementById("edit-sweetness").value = rowData.sweetness || 1;
+        document.getElementById("edit-body").value = rowData.body || 1;
+        document.getElementById("edit-finish").value = rowData.finish || 1;
+        document.getElementById("edit-notes").value = rowData.notes || '';
 
-        // Show the edit form
         showEditForm();
 
-        // Set up the update button's onclick handler
         document.getElementById("updateBtn").onclick = function () {
             updateData(rowIndex, row);
             closeEditForm();
@@ -618,15 +609,14 @@
     }
 
     function updateData(rowIndex, row) {
-        // Get updated values, ensuring numbers are parsed correctly
         let roast = document.getElementById("edit-roast").value;
         let origin = document.getElementById("edit-origin").value;
-        let waterWeight = parseFloat(document.getElementById("edit-waterweight").value);
-        let coffeeWeight = parseFloat(document.getElementById("edit-groundweight").value);
+        let waterWeight = document.getElementById("edit-waterweight").value;
+        let coffeeWeight = document.getElementById("edit-groundweight").value;
         let brewMethod = document.getElementById("edit-brewer").value;
         let time = document.getElementById("edit-time").value;
         let grindSize = document.getElementById("edit-grindsize").value;
-        let waterTemp = parseFloat(document.getElementById("edit-watertemp").value);
+        let waterTemp = document.getElementById("edit-watertemp").value;
         let aroma = parseFloat(document.getElementById("edit-aroma").value);
         let acidity = parseFloat(document.getElementById("edit-acidity").value);
         let sweetness = parseFloat(document.getElementById("edit-sweetness").value);
@@ -634,13 +624,16 @@
         let finish = parseFloat(document.getElementById("edit-finish").value);
         let notes = document.getElementById("edit-notes").value;
 
-        // Calculate average score
-        let averageScore = (aroma + acidity + sweetness + body + finish) / 5;
+        if (waterWeight.trim() === "" || isNaN(parseFloat(waterWeight)) || parseFloat(waterWeight) < 0 ||
+            coffeeWeight.trim() === "" || isNaN(parseFloat(coffeeWeight)) || parseFloat(coffeeWeight) < 0 ||
+            waterTemp.trim() === "" || isNaN(parseFloat(waterTemp)) || parseFloat(waterTemp) < 0) {
+            alert("Water weight, coffee weight, and water temperature must be non-negative numbers.");
+            return;
+        }
 
-        // Calculate the coffee-to-water ratio
+        let averageScore = (aroma + acidity + sweetness + body + finish) / 5;
         let ratio = coffeeWeight !== 0 ? "1:" + (waterWeight / coffeeWeight).toFixed(1) : "N/A";
 
-        // Update the data in the tabledata array
         tabledata[rowIndex] = {
             roast: roast,
             origin: origin,
@@ -659,18 +652,15 @@
             average_score: averageScore.toFixed(1),
             notes: notes
         };
-        //Update data, then save to storage
         row.update(tabledata[rowIndex]);
-        localStorage.setItem('tableData', JSON.stringify(tabledata));
-
-
+        saveUserData();
     }
+
 
     function infoRow(cell) {
         let row = cell.getRow();
         let rowData = row.getData();
 
-        // Populate info fields with current data
         document.getElementById("info-roast").textContent = rowData.roast;
         document.getElementById("info-origin").textContent = rowData.origin;
         document.getElementById("info-waterweight").textContent = rowData.water_weight;
@@ -682,7 +672,6 @@
         document.getElementById("info-watertemp").textContent = rowData.temperature;
         document.getElementById("info-notes").textContent = rowData.notes;
 
-        // Create the Plotly polar plot
         let trace1 = {
             type: 'scatterpolar',
             r: [rowData.aroma, rowData.acidity, rowData.sweetness, rowData.body, rowData.finish, rowData.aroma],
@@ -710,8 +699,8 @@
         }
 
         let layout = {
-            responsive: true, // Add this for responsiveness
-            autosize: true, // Add this for auto-sizing
+            responsive: true,
+            autosize: true,
             polar: {
                 radialaxis: {
                     visible: true,
@@ -727,7 +716,6 @@
         };
 
         Plotly.newPlot('plotlyChart', [trace1, trace2], layout);
-
         showInfoForm();
     }
 
@@ -735,35 +723,29 @@
         document.getElementById("editForm").style.display = "block";
     }
 
-
-
     function showInputForm() {
         document.getElementById("inputForm").style.display = "block";
     }
-
 
     function showInfoForm() {
         document.getElementById("infoForm").style.display = "block";
     }
 
-    // Function to close the edit form
     function closeEditForm() {
         document.getElementById("editForm").style.display = "none";
     }
 
-    // Function to close the input form
     function closeInputForm() {
         document.getElementById("inputForm").style.display = "none";
     }
 
-    // Function to close the info form
     function closeInfoForm() {
         document.getElementById("infoForm").style.display = "none";
     }
 
-    // Add event listeners to close forms when clicking outside the content
     document.addEventListener('DOMContentLoaded', function() {
         setupCloseFormListeners();
+        loadUserData();
     });
 
     function setupCloseFormListeners() {
@@ -787,15 +769,14 @@
     }
 
     function submitData() {
-        // Get values from input fields, ensuring numbers are parsed correctly
         let roast = document.getElementById("roast").value;
         let origin = document.getElementById("origin").value;
-        let waterWeight = parseFloat(document.getElementById("waterweight").value);
-        let coffeeWeight = parseFloat(document.getElementById("groundweight").value);
+        let waterWeight = document.getElementById("waterweight").value;
+        let coffeeWeight = document.getElementById("groundweight").value;
         let brewMethod = document.getElementById("brewer").value;
         let time = document.getElementById("time").value;
         let grindSize = document.getElementById("grindsize").value;
-        let waterTemp = parseFloat(document.getElementById("watertemp").value);
+        let waterTemp = document.getElementById("watertemp").value;
         let aroma = parseFloat(document.getElementById("aroma").value);
         let acidity = parseFloat(document.getElementById("acidity").value);
         let sweetness = parseFloat(document.getElementById("sweetness").value);
@@ -803,19 +784,21 @@
         let finish = parseFloat(document.getElementById("finish").value);
         let notes = document.getElementById("notes").value;
 
-        // Validation for numerical and positive values
-        if (isNaN(waterWeight) || waterWeight <= 0 || isNaN(coffeeWeight) || coffeeWeight <= 0 || isNaN(waterTemp) || waterTemp <= 0) {
-            alert("Water weight, coffee weight, and water temperature must be greater than 0 and numerical.");
-            return; // Stop submission
+        if (waterWeight.trim() === "" || isNaN(parseFloat(waterWeight)) || parseFloat(waterWeight) < 0 ||
+            coffeeWeight.trim() === "" || isNaN(parseFloat(coffeeWeight)) || parseFloat(coffeeWeight) < 0 ||
+            waterTemp.trim() === "" || isNaN(parseFloat(waterTemp)) || parseFloat(waterTemp) < 0) {
+            alert("Water weight, coffee weight, and water temperature must be non-negative numbers.");
+            return;
         }
 
-        // Calculate average score
-        let averageScore = (aroma + acidity + sweetness + body + finish) / 5;
+        waterWeight = parseFloat(waterWeight);
+        coffeeWeight = parseFloat(coffeeWeight);
+        waterTemp = parseFloat(waterTemp);
 
-        // Calculate the coffee-to-water ratio
+
+        let averageScore = (aroma + acidity + sweetness + body + finish) / 5;
         let ratio = coffeeWeight !== 0 ? "1:" + (waterWeight / coffeeWeight).toFixed(1) : "N/A";
 
-        // Create data object
         let newData = {
             roast: roast,
             origin: origin,
@@ -835,14 +818,9 @@
             notes: notes
         };
 
-        // Add new data to tabledata array and update the Tabulator table
         tabledata.push(newData);
-        table.addData([newData]);
-
-        // Store data in local storage
-        localStorage.setItem('tableData', JSON.stringify(tabledata));
-
-        // Close the input form
+        table.setData(tabledata);
+        saveUserData();
         closeInputForm();
     }
 </script>
