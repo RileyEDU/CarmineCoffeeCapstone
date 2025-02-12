@@ -574,11 +574,18 @@
 
     function deleteRow(cell) {
         let row = cell.getRow();
-        let rowIndex = row.getIndex();
-        tabledata.splice(rowIndex, 1);
-        saveUserData();
-        row.delete();
+        let rowData = row.getData();
+        let rowIndex = tabledata.findIndex(item => item === rowData)
+
+        if(rowIndex > -1){
+            tabledata.splice(rowIndex, 1);
+            saveUserData();
+            row.delete();
+        } else{
+            console.error("Row not found in tabledata");
+        }
     }
+
 
     function editRow(cell) {
         let row = cell.getRow();
