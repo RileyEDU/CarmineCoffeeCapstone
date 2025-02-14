@@ -631,12 +631,12 @@
         let finish = parseFloat(document.getElementById("edit-finish").value);
         let notes = document.getElementById("edit-notes").value;
 
-        if (waterWeight.trim() === "" || isNaN(parseFloat(waterWeight)) || parseFloat(waterWeight) < 0 ||
+        /*if (waterWeight.trim() === "" || isNaN(parseFloat(waterWeight)) || parseFloat(waterWeight) < 0 ||
             coffeeWeight.trim() === "" || isNaN(parseFloat(coffeeWeight)) || parseFloat(coffeeWeight) < 0 ||
             waterTemp.trim() === "" || isNaN(parseFloat(waterTemp)) || parseFloat(waterTemp) < 0) {
             alert("Water weight, coffee weight, and water temperature must be non-negative numbers.");
             return;
-        }
+        }*/
 
         let averageScore = (aroma + acidity + sweetness + body + finish) / 5;
         let ratio = coffeeWeight !== 0 ? "1:" + (waterWeight / coffeeWeight).toFixed(1) : "N/A";
@@ -791,12 +791,12 @@
         let finish = parseFloat(document.getElementById("finish").value);
         let notes = document.getElementById("notes").value;
 
-        if (waterWeight.trim() === "" || isNaN(parseFloat(waterWeight)) || parseFloat(waterWeight) < 0 ||
+        /*if (waterWeight.trim() === "" || isNaN(parseFloat(waterWeight)) || parseFloat(waterWeight) < 0 ||
             coffeeWeight.trim() === "" || isNaN(parseFloat(coffeeWeight)) || parseFloat(coffeeWeight) < 0 ||
             waterTemp.trim() === "" || isNaN(parseFloat(waterTemp)) || parseFloat(waterTemp) < 0) {
             alert("Water weight, coffee weight, and water temperature must be non-negative numbers.");
             return;
-        }
+        }*/
 
         waterWeight = parseFloat(waterWeight);
         coffeeWeight = parseFloat(coffeeWeight);

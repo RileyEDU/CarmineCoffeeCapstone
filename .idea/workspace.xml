@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="553812e2-848f-46bd-aa3b-6ad39a149c7e" name="Changes" comment="Multiuser update - Amend to fix validation" />
+    <list default="true" id="553812e2-848f-46bd-aa3b-6ad39a149c7e" name="Changes" comment="Resolved issue when deleting rows after adding new rows">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -104,7 +106,7 @@
       <workItem from="1739389647088" duration="411000" />
       <workItem from="1739390244229" duration="977000" />
       <workItem from="1739392651218" duration="813000" />
-      <workItem from="1739395895055" duration="1160000" />
+      <workItem from="1739395895055" duration="2119000" />
     </task>
     <task id="LOCAL-00001" summary="Multiuser update">
       <option name="closed" value="true" />
@@ -122,7 +124,23 @@
       <option name="project" value="LOCAL" />
       <updated>1739397019475</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Merge remote-tracking branch 'origin/main'&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;index.html">
+      <option name="closed" value="true" />
+      <created>1739397088201</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1739397088201</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Resolved issue when deleting rows after adding new rows">
+      <option name="closed" value="true" />
+      <created>1739397376626</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1739397376626</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -132,6 +150,7 @@
     <MESSAGE value="Multiuser update" />
     <MESSAGE value="Multiuser update - Amend to fix validation" />
     <MESSAGE value="Merge remote-tracking branch 'origin/main'&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;index.html" />
-    <option name="LAST_COMMIT_MESSAGE" value="Merge remote-tracking branch 'origin/main'&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;index.html" />
+    <MESSAGE value="Resolved issue when deleting rows after adding new rows" />
+    <option name="LAST_COMMIT_MESSAGE" value="Resolved issue when deleting rows after adding new rows" />
   </component>
 </project>
